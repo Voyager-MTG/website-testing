@@ -9,16 +9,32 @@
 	  font-family: 'Beleren Small Caps';
 	  src: url('/resources/beleren-caps.ttf');
 	}
+	:root {
+		--gradient: ""
+	}
 	body {
-		background-image: linear-gradient(to top, #ffdde1, #ee9ca7);
 		background-attachment: fixed;
 		overscroll-behavior: none;
 		font-family: 'Helvetica', 'Arial', sans-serif;
 		display: grid;
 		overflow-x: hidden;
+		margin: 0;
+	}
+	body::before {
+		content: "";
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		z-index: -1;
+		background-image: var(--gradient);	
+		/* background-attachment: fixed; */
+		background-size: cover;
 	}
 	.selects {
 		position: absolute;
+		margin: 10px;
 	}
 	.item-container {
 		height: auto;
@@ -214,8 +230,9 @@
 	}
 	.settings {
 		position: relative;
-		left: 98%;
+		float: right;
 		width: fit-content;
+		margin: 10px;
 	}
 	#modal-container {
 		display: none; 
@@ -264,6 +281,9 @@
 		font-size: 20px;
 	}
 	</style>
+	<style id="gradient-style">
+
+	</style>
 	<body>
 		<div class="selects" id="selects">
 			<select id="color-select" onchange="setGradient()">
@@ -272,6 +292,7 @@
 		<div class="settings" id="settings">
 			<img src="img/settings.png" class="settings-icon" onclick="openSettingsModal()">
 		</div>
+		<div id="gradient"></div>
 		<div class="item-container">
 			<img class="banner" src="img/banner.png"></img>
 			<input type="text" inputmode="search" placeholder="Search ..." autofocus="autofocus" name="search" id="search" spellcheck="false" autocomplete="off" autocorrext="off" spellcheck="false">
@@ -515,7 +536,10 @@
 				}
 
 				// console.log(`linear-gradient(to bottom, ${gradTop}, ${gradBottom})`);
-				document.body.style.backgroundImage = `linear-gradient(to bottom, ${gradTop}, ${gradBottom})`;
+				document.body.style.setProperty("--gradient", `linear-gradient(to bottom, ${gradTop}, ${gradBottom})`);
+				// cssVars({
+				// 	variables: {'--gradient': `linear-gradient(to bottom, ${gradTop}, ${gradBottom})`}
+				// });
 				localStorage.setItem("settings.gradient", gradient);
 			}
 

@@ -156,11 +156,12 @@
 		position: relative;
 	}
 	.search-image-gradient {
-		top: 91vh;
 		height: 6vh;
 		z-index: 1;
-		width: 32vw;
 		background-size: cover;
+		pointer-events: none;
+		position: absolute;
+		top: calc(89% + 20px);
 	}
 	@media ( max-width: 750px ) {
 		.image-grid {
@@ -675,8 +676,10 @@
 			</div>
 			<div class="search-results-container">
 				<div class="search-image-grid-container">
-					<div class="search-image-gradient"></div>
 					<div class="search-image-grid" id="imagesOnlyGrid">
+					</div>
+					<div class="search-image-gradient-container">
+						<div class="search-image-gradient"></div>
 					</div>
 				</div>
 				<div class="card-grid-container" id="card-grid-container">
