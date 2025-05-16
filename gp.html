@@ -493,6 +493,14 @@
             padding: 8px;
             border-radius: 8px;
         }
+        .initial-text {
+            grid-column: span 4;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+            font-style: italic;
+            color: #444;
+        }
     </style>
     <style id="text-style">
         .text {
@@ -529,6 +537,7 @@
             <div class="admin-container" id="admin">
                 <span>Admin Options: </span>
                 <button class="push-gp admin-btn" id="push-gp">Push GP Round</button>
+                <button class="new-gp admin-btn"  id="new-gp" >Create new GP</button>
             </div>
             <div class="main-tab" id="main-tab">
                 <div class="decks-tab" id="decklists"></div>
@@ -718,6 +727,9 @@
                         document.getElementById('push-gp').addEventListener("click", (e) => {
                             console.log("PUUUUUUSH");
                             pushGP(event_data);
+                        });
+                        document.getElementById('new-gp').addEventListener("click", (e) => {
+                            newGP();
                         });
                         document.getElementById('admin').style.display = "block";
                     }
@@ -950,78 +962,85 @@
                         document.getElementById("games").appendChild(bracket_container);
                     }
 
-                    for (const user in decks) {
-                        let deck = decks[user];
-                        let full_deck_container = document.createElement('div');
-                        full_deck_container.className = "full-deck-container";
-                        let deck_container = document.createElement('div');
-                        deck_container.className = "deck-container";
-                        let colors_container = document.createElement('div');
-                        colors_container.className = "colors-container";
-                        let deck_preview = document.createElement('img');
-                        deck_preview.src = deck.previewimg;
-                        deck_preview.onclick = function() {
-                            document.getElementById("modal-content").innerHTML = `<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>`;
-                            let deck_header = document.createElement("span");
-                            deck_header.className = "deck-window-header";
-                            deck_header.innerText = user + "'s " + deck.name;
-                            document.getElementById("modal-content").appendChild(deck_header);
-                            document.getElementById("modal-content").appendChild(deckHTML(deck, card_list));
-                            document.getElementById("modal-container").style.display = 'block';
-                        }
-                        deck_preview.className = "deck-preview-img";
-                        let deck_name = document.createElement('div');
-                        deck_name.className = "deck-name";
-                        deck_name.innerText = user + "'s " + deck.name;
-                        let deck_btns = document.createElement('div');
-                        deck_btns.className = "deck-buttons";
-                        let deck_link = document.createElement('a');
-                        deck_link.href = `/deckbuilder?edeck=${event}-${deck.name}`;
-                        deck_link.innerText = "Deckbuilder";
-                        deck_link.className = "deck-link-green deck-icon-shadow";
-                        deck_link.target = "_blank";
-                        let deck_edit_icon = document.createElement('img');
-                        deck_edit_icon.src = "/img/edit.png";
-                        deck_edit_icon.className = "deck-icon-green";
-                        deck_link.appendChild(deck_edit_icon);
-                        let deck_link2 = document.createElement('span');
-                        deck_link2.innerText = "View";
-                        deck_link2.className = "deck-link-blue deck-icon-shadow";
-                        let deck_edit_icon2 = document.createElement('img');
-                        deck_edit_icon2.src = "/img/show-white.png";
-                        deck_edit_icon2.className = "deck-icon-blue";
-                        deck_link2.onclick = function() {
-                            document.getElementById("modal-content").innerHTML = `<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>`;
-                            let deck_header = document.createElement("span");
-                            deck_header.className = "deck-window-header";
-                            deck_header.innerText = user + "'s " + deck.name;
-                            document.getElementById("modal-content").appendChild(deck_header);
-                            document.getElementById("modal-content").appendChild(deckHTML(deck, card_list));
-                            document.getElementById("modal-container").style.display = 'block';
-                        }
-                        deck_link2.appendChild(deck_edit_icon2);
-                        if (deck.colors) {
-                            for (const color of deck.colors) {
-                                let color_ele = document.createElement('img');
-                                color_ele.src = `img/mana_${color}.png`;
-                                color_ele.className = "mana-img";
-                                colors_container.appendChild(color_ele);
+                    if (event_data.stage != "initial") {
+                        for (const user in decks) {
+                            let deck = decks[user];
+                            let full_deck_container = document.createElement('div');
+                            full_deck_container.className = "full-deck-container";
+                            let deck_container = document.createElement('div');
+                            deck_container.className = "deck-container";
+                            let colors_container = document.createElement('div');
+                            colors_container.className = "colors-container";
+                            let deck_preview = document.createElement('img');
+                            deck_preview.src = deck.previewimg;
+                            deck_preview.onclick = function() {
+                                document.getElementById("modal-content").innerHTML = `<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>`;
+                                let deck_header = document.createElement("span");
+                                deck_header.className = "deck-window-header";
+                                deck_header.innerText = user + "'s " + deck.name;
+                                document.getElementById("modal-content").appendChild(deck_header);
+                                document.getElementById("modal-content").appendChild(deckHTML(deck, card_list));
+                                document.getElementById("modal-container").style.display = 'block';
+                            }
+                            deck_preview.className = "deck-preview-img";
+                            let deck_name = document.createElement('div');
+                            deck_name.className = "deck-name";
+                            deck_name.innerText = user + "'s " + deck.name;
+                            let deck_btns = document.createElement('div');
+                            deck_btns.className = "deck-buttons";
+                            let deck_link = document.createElement('a');
+                            deck_link.href = `/deckbuilder?edeck=${event}-${deck.name}`;
+                            deck_link.innerText = "Deckbuilder";
+                            deck_link.className = "deck-link-green deck-icon-shadow";
+                            deck_link.target = "_blank";
+                            let deck_edit_icon = document.createElement('img');
+                            deck_edit_icon.src = "/img/edit.png";
+                            deck_edit_icon.className = "deck-icon-green";
+                            deck_link.appendChild(deck_edit_icon);
+                            let deck_link2 = document.createElement('span');
+                            deck_link2.innerText = "View";
+                            deck_link2.className = "deck-link-blue deck-icon-shadow";
+                            let deck_edit_icon2 = document.createElement('img');
+                            deck_edit_icon2.src = "/img/show-white.png";
+                            deck_edit_icon2.className = "deck-icon-blue";
+                            deck_link2.onclick = function() {
+                                document.getElementById("modal-content").innerHTML = `<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>`;
+                                let deck_header = document.createElement("span");
+                                deck_header.className = "deck-window-header";
+                                deck_header.innerText = user + "'s " + deck.name;
+                                document.getElementById("modal-content").appendChild(deck_header);
+                                document.getElementById("modal-content").appendChild(deckHTML(deck, card_list));
+                                document.getElementById("modal-container").style.display = 'block';
+                            }
+                            deck_link2.appendChild(deck_edit_icon2);
+                            if (deck.colors) {
+                                for (const color of deck.colors) {
+                                    let color_ele = document.createElement('img');
+                                    color_ele.src = `img/mana_${color}.png`;
+                                    color_ele.className = "mana-img";
+                                    colors_container.appendChild(color_ele);
+                                }
+                            }
+                            deck_btns.appendChild(deck_link);
+                            deck_btns.appendChild(deck_link2);
+                            deck_container.appendChild(deck_name);
+                            deck_container.appendChild(deck_preview);
+                            deck_container.appendChild(deck_btns);
+                            full_deck_container.appendChild(deck_container);
+                            if(deck.colors) full_deck_container.appendChild(colors_container);
+                            if (deck.colors){
+                                document.getElementById("decklists").appendChild(full_deck_container);
+                            } else {
+                                document.getElementById("decklists").appendChild(deck_container);
                             }
                         }
-                        deck_btns.appendChild(deck_link);
-                        deck_btns.appendChild(deck_link2);
-                        deck_container.appendChild(deck_name);
-                        deck_container.appendChild(deck_preview);
-                        deck_container.appendChild(deck_btns);
-                        full_deck_container.appendChild(deck_container);
-                        if(deck.colors) full_deck_container.appendChild(colors_container);
-                        if (deck.colors){
-                            document.getElementById("decklists").appendChild(full_deck_container);
-                        } else {
-                            document.getElementById("decklists").appendChild(deck_container);
-                        }
+                    } else {
+                        const initial_text = document.createElement("span");
+                        initial_text.className = "initial-text";
+                        initial_text.innerText = `Deck submissions are open for ${event}`;
+                        document.getElementById("decklists").appendChild(initial_text);
                     }
-                });
+              });
             }
 
             function deckHTML(deck, card_list) {
@@ -1261,7 +1280,9 @@
                             decks:  JSON.stringify(decks),
                             rounds: JSON.stringify(parsed_data),
                             num_rounds: event_data.num_rounds,
-                            stage: event_data.stage
+                            stage: event_data.stage,
+                            name: event_data.name,
+                            winner: event_data.winner
                         });
                         document.getElementById("modal-container").style.display = "none";
                         reload();
@@ -1274,7 +1295,9 @@
                             decks:  JSON.stringify(decks),
                             rounds: JSON.stringify(parsed_data),
                             num_rounds: event_data.num_rounds,
-                            stage: event_data.stage
+                            stage: event_data.stage,
+                            name: event_data.name,
+                            winner: event_data.winner
                         });
                         document.getElementById("modal-container").style.display = "none";
                         reload();
@@ -1651,7 +1674,9 @@
                         decks:  event_data.decks,
                         rounds: JSON.stringify(rounds),
                         num_rounds: event_data.num_rounds,
-                        stage: event_data.stage
+                        stage: event_data.stage,
+                        name: event_data.name,
+                        winner: event_data.winner
                     });
                     reload();
                 } 
@@ -1792,7 +1817,9 @@
                         decks:  event_data.decks,
                         rounds: JSON.stringify(rounds),
                         num_rounds: event_data.num_rounds,
-                        stage: "bracket"
+                        stage: "bracket",
+                        name: event_data.name,
+                        winner: event_data.winner
                     });
                     reload();
                 } 
@@ -1817,13 +1844,27 @@
                         decks:  event_data.decks,
                         rounds: JSON.stringify(rounds),
                         num_rounds: numRounds(in_games.length),
-                        stage: "swiss"
+                        stage: "swiss",
+                        name: event_data.name,
+                        winner: event_data.winner
                     });
                     reload();
                 }
                 else {
                     alert("There's no need to push rounds in top cut, you just need to paste the discord message copied to your clipboard");
                 }
+            }
+
+            async function newGP() {
+                const event_name = window.prompt("GP Name?");
+                await setDoc(doc(db, 'events', event_name), {
+                        decks:  "[]",
+                        rounds: '{"swiss":{},"bracket":{}}',
+                        num_rounds: 0,
+                        stage: "initial",
+                        name: event_name,
+                        winner: "TBD"
+                });
             }
 
             function numRounds(n) {
