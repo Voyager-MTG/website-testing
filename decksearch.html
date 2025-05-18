@@ -208,6 +208,7 @@
 				<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>
 			</div>
 		</div>
+        <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
         <script>
             let gradients = null;
             let raw_gradients = null;
@@ -329,6 +330,7 @@
             let sessionid = localStorage.getItem('settings.session');
             let decks = {};
             const events = ["GP1", "League"];
+            const urlParams = new URLSearchParams(window.location.search);
             // console.log
 
             if (sessionid) {
@@ -349,28 +351,34 @@
 
             
             async function reload() {
-                const q = query(collection(db, "users"));
-                const all_users = await getDocs(q);
-                const all_decks = [];
-                all_users.forEach((doc) => {
-                    const data = doc.data();
-                    for (const deck of JSON.parse(data.decks)) {
-                        all_decks.push({...deck, "user": data.username})
-                    }
-                    // all_decks.push(...JSON.parse(data.decks));
-                    console.log(all_decks);
-                });
+                let date = new Date();
+                document.getElementById("search").value = urlParams.get("search");
+                if (!localStorage.getItem("info.alldecks") || localStorage.getItem("info.lastday") != date.getDate()) {
+                    const q = query(collection(db, "users"));
+                    const all_users = await getDocs(q);
+                    const all_decks = [];
+                    all_users.forEach((doc) => {
+                        const data = doc.data();
+                        for (const deck of JSON.parse(data.decks)) {
+                            all_decks.push({...deck, "user": data.username})
+                        }
+                        // all_decks.push(...JSON.parse(data.decks));
+                        console.log(all_decks);
+                    });
+                    localStorage.setItem("info.alldecks", LZString.compress(JSON.stringify(all_decks)));
+                    localStorage.setItem("info.lastday", date.getDate());
+                }
+                const all_decks = JSON.parse(LZString.decompress(localStorage.getItem("info.alldecks")));
                 document.getElementById("search-btn").addEventListener("click", (e) => {
-                    console.log("SEARCHING");   
-                    search(all_decks);
+                    window.location.href = `?search=${document.getElementById('search').value}`;
                 });
                 document.getElementById("search").addEventListener("keypress", function(event) {
                     if (event.key === "Enter") {
                         event.preventDefault();
-                        search(all_decks);
+                        window.location.href = `?search=${document.getElementById('search').value}`;
                     }
                 });
-                // search(all_decks);
+                search(all_decks);
                 // await getDoc(doc(db, 'users', username)).then(async docSnap => {
                 //     let user_data = docSnap.data();
                 //     // firebase code

@@ -535,7 +535,7 @@
                 </div>
             </div>
             <div class="admin-container" id="admin">
-                <span>Admin Options: </span>
+                <span class="text">Admin Options: </span>
                 <button class="push-gp admin-btn" id="push-gp">Push GP Round</button>
                 <button class="new-gp admin-btn"  id="new-gp" >Create new GP</button>
             </div>
@@ -722,6 +722,7 @@
                     const decks = JSON.parse(event_data.decks);
                     const rounds = JSON.parse(event_data.rounds);
                     console.log(rounds);
+                    statsHelper(rounds.swiss);
                     document.title = event;
                     if (admin) {
                         document.getElementById('push-gp').addEventListener("click", (e) => {
@@ -1353,6 +1354,7 @@
                     }
                     omw[player] = total / count;
                 }
+                console.log(JSON.stringify({records: records, match_total: match_total, opps: opps, omw: omw}));
                 return {records: records, match_total: match_total, opps: opps, omw: omw};
             }
 
@@ -1599,7 +1601,6 @@
                         let seedings_2 = [...seedings];
                         Array.prototype.swiss_sort = function(p) {
                             function compare(a, b) {
-                                console.log("OPPS", p.opps[p.player]);
                                 if (p.opps[p.player].includes(a.player) && !p.opps[p.player].includes(b.player)) {
                                     return -1;
                                 }
