@@ -105,8 +105,8 @@
         }
         .main-tab {
             width: 100%;
-            margin: 0 40px 0 40px;
-            margin-top: 100px;
+            margin: 20px 40px 0 40px;
+            /* margin-top: 100px; */
         }
         .deck-section-container {
             display: grid;
@@ -186,6 +186,106 @@
             text-align: center;
             width: 100%;
         }
+        .users-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin: 15px;
+        }
+        .user-container {
+            display: grid;
+            gap: 5px;
+            /* grid-template-rows: 1fr 2fr 1fr; */
+            background-color: #f3f3f3;
+            border-radius: 8px; 
+            /* height: 100%; */
+            padding: 5px;
+            align-items: center;
+            justify-items: center;
+            border: 2px solid #333;
+            box-shadow: 5px 5px 2px #333;
+            padding-top: 0px;
+        }
+        .user-name-container {
+            font-family: beleren;
+            font-size: 28px;
+        }
+        .deck-icon-green {
+            max-height:30px;
+            background-color: #16e019;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+        }
+        .deck-link-green {
+            background-color: #16e019;
+            color: white;
+            padding: 2px 6px 2px 6px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: grid;
+            grid-template-columns: 5fr 1fr;
+            align-items: center;
+            justify-items: center;
+            font-size: 24px; 
+            cursor: pointer;
+            /* border: 2px solid #333;
+            box-shadow: 2px 2px 1px #333; */
+        }
+        .deck-link-blue {
+            background-color: #4816e0;
+            color: white;
+            padding: 2px 6px 2px 6px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: grid;
+            grid-template-columns: 5fr 1fr;
+            align-items: center;
+            justify-items: center;
+            font-size: 24px; 
+            cursor: pointer;
+            /* border: 2px solid #333;
+            box-shadow: 2px 2px 1px #333; */
+        }
+        .deck-icon-blue {
+            max-height:30px;
+            background-color: #4816e0;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+        }
+        .deck-icon-shadow {
+            /* border: 3px solid black; */
+            /* box-shadow: 2px 2px 1px #333; */
+            box-shadow: inset 0.2em 0.2em 0.2em 0 rgba(255,255,255,0.5), inset -0.2em -0.2em 0.2em 0 rgba(0,0,0,0.5);
+            padding: 0.3em;
+        }
+        .tab-btn {
+            background-color: #737373;
+            color: white;
+            border: 3px solid #ddd;
+            align-items: center;
+            justify-items: center;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            font-weight: bold;
+            font-size: 24px;
+            padding: 8px;
+            border-radius: 18px; 
+            cursor: pointer;
+        }
+        .tab-btn-active {
+            background-color: #333;
+        }
+        .tab-switch-icon {
+            max-height: 30px;
+        }
+        .tab-select {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 40px;
+        }
     </style>
     <style id="text-style">
         .text {
@@ -209,6 +309,20 @@
 			</select>
 		</div>
         <div class="page-container">
+            <div class="tab-select" id="tab-select">
+                <div class="tab-btn" id="users-tab-select" onclick="changeTab('users')">
+                    <img src="img/swords.png" class="tab-switch-icon">
+                    <span>Users</span>
+                </div>
+                <div class="tab-btn" id="decks-tab-select" onclick="changeTab('decks')">
+                    <img src="img/deck.png" class="tab-switch-icon">
+                    <span>Decks</span>
+                </div>
+                <div class="tab-btn" id="events-tab-select" onclick="changeTab('events')">
+                    <img src="img/trophy.png" class="tab-switch-icon">
+                    <span>Events</span>
+                </div>
+            </div>
             <div id="main-tab" class="main-tab">
 
             </div>
@@ -306,6 +420,10 @@
 
 				window.location.href = url;
 			}
+
+            function changeTab(tab) {
+                window.location.href = "community.html?tab=" + tab;
+            }
         </script>
         <script type="module">
             // Import the functions you need from the SDKs you need
@@ -325,10 +443,6 @@
                 appId: "1:411191248476:web:591349be169d823e5f8899",
                 measurementId: "G-TQ1L48F25M"
             };
-
-            const color_bgs = {
-                white: "#"
-            }
             
             // Initialize Firebase
             const app = initializeApp(firebaseConfig);
@@ -338,6 +452,9 @@
             let sessionid = localStorage.getItem('settings.session');
             let decks = {};
             const events = ["GP1", "League"];
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            document.getElementById(`${tab}-tab-select`).className += " tab-btn-active";
             // console.log
 
             if (sessionid) {
@@ -362,7 +479,6 @@
             let all_users = [];
             let all_events_docs;
             let all_events = [];
-            const urlParams = new URLSearchParams(window.location.search);
             
             async function reload() {
                 q = query(collection(db, "users"));
@@ -387,10 +503,8 @@
                         let deck = JSON.parse(data.decks)[user];
                         all_decks.push({...deck, "user": user, "event": true});
                     }
-                }); 
-                const urlParams = new URLSearchParams(window.location.search);
-                const tab = urlParams.get('tab');
-                makeTab(tab);
+                });
+                makeTab(tab); 
             }
 
             async function makeTab(tab) {
@@ -399,6 +513,9 @@
                 }
                 if (tab == "decks") {
                     document.getElementById("main-tab").appendChild(await makeDecksTab());
+                }
+                if (tab == "users") {
+                    document.getElementById("main-tab").appendChild(makeUsersTab());
                 }
             }
 
@@ -431,13 +548,17 @@
             }
 
             function gridifyDeck(deck) {
+                console.log(deck);
                 const container = document.createElement("div");
                 container.className = "deck-container";
                 const preview_img = document.createElement("img");
                 preview_img.src = deck.previewimg;
                 preview_img.className = "deck-preview-img";
                 preview_img.onclick = function() {
-                    window.location.href = `/deckbuilder?udeck=${deck.user}-${deck.name}`
+                    if (deck.event) 
+                        window.location.href = `/deckbuilder?edeck=${deck.event}-${deck.user}`;
+                        return;
+                    window.location.href = `/deckbuilder?udeck=${deck.user}-${deck.name}`;
                 }
                 const deck_name = document.createElement("div");
                 deck_name.className = "deck-name";
@@ -492,6 +613,60 @@
                 return container;
             }
 
+            function makeUsersTab() {
+                const users_container = document.createElement("div");
+                users_container.className = "users-container";
+
+                for (const user of all_users) {
+                    users_container.appendChild(gridifyUser(user));
+                }
+
+                return users_container;
+            }
+
+            function gridifyUser(user) {
+                const user_container = document.createElement("div");
+                user_container.className = "user-container";
+                
+                const name_container = document.createElement("span");
+                name_container.className = "user-name-container";
+                name_container.innerText = user.username;
+
+                const decks_button = document.createElement("div");
+                decks_button.className = "view-decks-button deck-link-green deck-icon-shadow";
+                decks_button.innerText = "View Decks";
+                
+                const show_img = document.createElement("img");
+                show_img.className = "show-img deck-icon-green";
+                show_img.src = "img/show-white.png";
+                decks_button.appendChild(show_img);
+
+                decks_button.onclick = function() {
+                    window.location.href = `/decksearch?search=user:${user.username}`;
+                }
+
+                const view_button = document.createElement("div");
+                view_button.className = "view-decks-button deck-link-blue deck-icon-shadow";
+                view_button.innerText = "View Page";
+                
+                const show_img_2 = document.createElement("img");
+                show_img_2.className = "show-img deck-icon-blue";
+                show_img_2.src = "img/show-white.png";
+                view_button.appendChild(show_img_2);
+
+                view_button.onclick = function() {
+                    window.location.href = `/user?user=${user.username}`;
+                }
+            
+                user_container.appendChild(name_container);
+                user_container.appendChild(decks_button);
+                user_container.appendChild(view_button);
+
+                return user_container;
+            }
+
+
+
             async function getWinningDecks() {
                 let recent_event;
                 let best_decks = [];
@@ -506,7 +681,7 @@
                     for (const user in decks) {
                         const deck = decks[user];
                         if (records[user][1] <= 1) {
-                            best_decks.push(deck);
+                            best_decks.push({...deck, event: recent_event, user: user});
                         }
                     }
                 });
