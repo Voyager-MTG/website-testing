@@ -348,7 +348,7 @@
 		height: 100%;
 		overflow-y: hidden;
 	}
-	.deck-cards-container, .deck-cards-background {
+	.deck-cards-container {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		overflow-y: scroll;
@@ -627,6 +627,27 @@
 	.preview-card-image {
 		max-width: 30vw;
 	}
+	.mana-curve-bar {
+		background-color: black;
+		width: 20px;
+		/* position: relative; */
+		/*top:100%; */
+		/* bottom: 0; */
+	}
+	.stats-tab-container {
+		margin-top: 40px;
+	}
+	.mana-curve-container {
+		display: grid;
+		grid-template-columns: repeat(7, 20px);
+		align-items: end;
+		justify-items: center;
+	}
+	.mana-curve-bar-container {
+		display: grid;
+		text-align: center;
+		gap: 5px;
+	}
 </style>
 <style id="popout-style">
 	.popout {
@@ -698,6 +719,7 @@
 				<select name="display-select" class="display-select popout" id="display-select">
 					<option value="text">Text</option>
 					<option value="images">Images</option>
+					<option value="stats">Stats</option>
 				</select>
 				<div id="save-btn" class="file-icon-container">
 					<img src="/img/save.png" class="file-icon" title="save" style="cursor: pointer;" onclick="saveDeck()">
@@ -721,7 +743,6 @@
 				<input type="file" class="hidden" id="import-file" onclick="this.value=null;">
 			</div>
 			<div class="static-deck-container">
-				<div class="deck-cards-background" style="opacity: 0.5;"></div>
 				<div class="deck-cards-container">
 					<div class="deck-col" id="col1">
 						<div class="deck-section" id="deck-creature">
@@ -786,7 +807,8 @@
 			</div>
 		</div>
 	</div>
-
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/emn178/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
 	<script>
 		// initialize variables
 		let search_results = [];
@@ -800,6 +822,61 @@
 		let deck_2 = {};
 		let sideboard_2 = {};
 		let gradients = [];
+
+		const deck_cards_html = `<div class="deck-col" id="col1">
+					<div class="deck-section" id="deck-creature">
+						<span id="deck-creature-title">Creatures (0)</span>
+						<div class="deck-inner-section" id="deck-creature-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-planeswalker">
+						<span id="deck-planeswalker-title">Planeswalkers (0)</span>
+						<div class="deck-inner-section" id="deck-planeswalker-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-artifact">
+						<span id="deck-artifact-title">Artifacts (0)</span>
+						<div class="deck-inner-section" id="deck-artifact-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-enchantment">
+						<span id="deck-enchantment-title">Enchantments (0)</span>
+						<div class="deck-inner-section" id="deck-enchantment-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-battle">
+						<span id="deck-battle-title">Battles (0)</span>
+						<div class="deck-inner-section" id="deck-battle-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-other">
+						<span id="deck-other-title">Other (0)</span>
+						<div class="deck-inner-section" id="deck-other-cards">
+						</div>
+					</div>
+				</div>
+				<div class="deck-col" id="col2">
+					<div class="deck-section" id="deck-instant">
+						<span id="deck-instant-title">Instants (0)</span>
+						<div class="deck-inner-section" id="deck-instant-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-sorcery">
+						<span id="deck-sorcery-title">Sorceries (0)</span>
+						<div class="deck-inner-section" id="deck-sorcery-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-land">
+						<span id="deck-land-title">Lands (0)</span>
+						<div class="deck-inner-section" id="deck-land-cards">
+						</div>
+					</div>
+					<div class="deck-section" id="deck-sideboard">
+						<span id="deck-sideboard-title">Sideboard (0)</span>
+						<div class="deck-inner-section" id="deck-sideboard-cards">
+						</div>
+					</div>
+				</div>`
 
 		// load resource files
 		document.addEventListener("DOMContentLoaded", async function () {
@@ -925,6 +1002,176 @@
 
 		function displayChangeListener() {
 			preSearch();
+		}
+
+		function makeStatsTab(deck_cards) {
+			const stats_tab_1 = document.createElement("div");
+			stats_tab_1.className = "stats-tab-container";
+			const stats_tab_2 = document.createElement("div");
+			stats_tab_2.className = "stats-tab-container";
+
+			let mana_values = [0,0,0,0,0,0,0,0];
+			let color_cards = {"W": 0, "U": 0, "B": 0, "R": 0, "G": 0, "I": 0, "M": 0, "C": 0};
+			let card_types = {};
+			const mv_labels = ["0", "1", "2", "3", "4", "5", "6+"];
+			const total_length  = deck.length + sideboard.length;
+
+			const mana_curve_chart = document.createElement("canvas");
+			mana_curve_chart.id = "mana-curve-chart";
+			mana_curve_chart.className = "mana-curve-chart";
+
+			const colors_chart = document.createElement("canvas");
+			colors_chart.id = "deck-colors-chart";
+			colors_chart.className = "deck-colors-chart";
+
+			const types_chart = document.createElement("canvas");
+			types_chart.id = "deck-types-chart";
+			types_chart.className = "deck-types-chart";
+
+			for (const card of deck) {
+				const card_stats = JSON.parse(card);
+				let card_mv = convertToMV(card_stats.cost);
+				const color = card_stats.color;
+				if (!card_stats.type.includes("Land")) {
+					card_mv = Math.min(6, card_mv);
+					// console.log(card_mv, mana_values[card_mv], card_stats);
+					mana_values[card_mv] += 1;
+					if (color_cards[color] != null) {
+						color_cards[color] += 1;
+					} else if (color == "") {
+						color_cards["C"] += 1;
+					} else {
+						color_cards["M"] += 1;
+					}
+				}
+				
+			}			
+
+			for (const card of sideboard) {
+				const card_stats = JSON.parse(card);
+				let card_mv = convertToMV(card_stats.cost);
+				const color = card_stats.color;
+				if (!card_stats.type.includes("Land")) {
+					card_mv = Math.min(6, card_mv);
+					mana_values[card_mv] += 1;
+					if (color_cards[color] != null) {
+						color_cards[color] += 1;
+					} else if (color == "") {
+						color_cards["C"] += 1;
+					} else {
+						color_cards["M"] += 1;
+					}
+				}
+			}
+
+			for (const [key, map] of deck_cards) {
+				if (key == "sideboard")
+					continue;
+				for (const card of map.keys()) {
+					let num = map.get(card);
+					if (card_types[key] == null) {
+						card_types[key] =  num;
+					} else {
+						card_types[key] += num;
+					}
+				}
+			}
+
+			stats_tab_1.appendChild(mana_curve_chart);
+			stats_tab_1.appendChild(types_chart);
+			stats_tab_2.appendChild(colors_chart);
+
+			document.getElementsByClassName("deck-cards-container")[0].appendChild(stats_tab_1);
+			document.getElementsByClassName("deck-cards-container")[0].appendChild(stats_tab_2);
+			const background_colors = "rgba(0,0,0,0.6) ".repeat(mana_values.length).split(" ");
+
+			console.log(card_types);
+
+			new Chart("mana-curve-chart", {
+				type: "bar",
+				data: {
+					labels: mv_labels,
+					datasets: [{
+						data: mana_values,
+						backgroundColor: background_colors
+					}]
+				}, options: {
+					legend: {display: false},
+					title: {
+						display: true,
+						text: `       Mana Curve       (Average: ${mv_average(mana_values, total_length).toFixed(2)})`
+					}, 
+					plugins: {
+						labels: {
+							render: "value"
+						}
+					}
+				}
+			});
+
+			const color_bgs = ["#F0F2C0", "#B5CDE3", "#ACA29A", "#DB8664", "#93B483", "#9B91B2", "#ebd567", "#BEB9B2"]
+
+			new Chart("deck-colors-chart", {
+				type: "pie",
+				data: {
+					labels: ["White", "Blue", "Black", "Red", "Green", "Silver", "Multicolor", "Colorless"],
+					datasets: [{
+						data: Object.values(color_cards),
+						backgroundColor: color_bgs
+					}]
+				}, options: {
+					legend: {display: false},
+					title: {
+						display: true,
+						text: "Card Colors"
+					}, 
+					plugins: {
+						labels: {
+							render: "value",
+							position: "border"
+						}
+					}	
+				}
+			});
+
+			new Chart("deck-types-chart", {
+				type: "bar",
+				data: {
+					labels: Object.keys(card_types),
+					datasets: [{
+						data: Object.values(card_types),
+						backgroundColor: background_colors
+					}]
+				}, options: {
+					legend: {display: false},
+					title: {
+						display: true,
+						text: "Card Types"
+					}, 
+					plugins: {
+						labels: {
+							render: "value",
+							position: "outside"
+						}
+					}
+				}
+			});
+		}
+
+		function mv_average(l, total_length) {
+			let total_mv = 0;
+			let current_mv = 0;
+			
+			for (const i of l) {
+				total_mv += current_mv * i;
+				current_mv++;
+			}
+
+			return total_mv / total_length;
+		}
+
+		function getManaValue(card) {
+
 		}
 
 		function prepareGradients() {
@@ -2012,7 +2259,7 @@
 				{
 					mv += 2;
 				}
-				else if (token != "x")
+				else if (token != "x" && token != "")
 				{
 					mv += 1;
 				}
@@ -2920,7 +3167,10 @@
 		}
 
 		function processDeck() {
-
+			const display_style = document.getElementById("display-select").value;
+			if (display_style != "stats") {
+				document.getElementsByClassName("deck-cards-container")[0].innerHTML = deck_cards_html;
+			}
 			// handle settings at the top
 			if (localStorage.getItem("settings.darkthememenu") == "On") {
 				document.getElementById("popout-style").innerHTML = ".popout { background-color: #000 !important; color: #f3f3f3 !important; }";
@@ -3049,7 +3299,6 @@
 					{
 						// loop through each card in the deck with the card type
 						// get the display style (text or image), the card json, and the name
-						const display_style = document.getElementById("display-select").value;
 						const card_stats = JSON.parse(card);
 						const card_name = card_stats.card_name;
 
@@ -3057,12 +3306,16 @@
 						{
 							generateCardHTML("text", map, card, key, card_stats, cards_list);
 						}
-						else // the display style is image
+						else if (display_style == "images") // the display style is image
 						{
 							generateCardHTML("image", map, card, key, card_stats, cards_list);
 						}
 					}
 				}
+			}
+			if (display_style == "stats") {
+				document.getElementsByClassName("deck-cards-container")[0].innerHTML = "";
+				makeStatsTab(deck_cards);
 			}
 		}
 
