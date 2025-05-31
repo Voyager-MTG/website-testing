@@ -475,121 +475,15 @@
                     console.log(decks);
                     document.getElementById('decks').innerHTML = "";
                     for (const deck of decks) {
+
                         if (!used_formats.includes(deck.format)) {
                             used_formats.push(deck.format);
-                            let format_container = document.createElement("div");
-                            format_container.className = "format-container";
-                            format_container.id = deck.format;
-                            let format_header = document.createElement("div");
-                            format_header.innerText = deck.format;
-                            format_header.className = "format-header";
-                            let divider = document.createElement("hr");
-                            document.getElementById('decks').appendChild(format_header);
-                            document.getElementById('decks').appendChild(divider);
-                            document.getElementById('decks').appendChild(format_container);
+                            const full_format_container = createFormatContainer(deck.format);
+                            document.getElementById('decks').appendChild(full_format_container);
                         }
-                        let full_deck_container = document.createElement('div');
-                        full_deck_container.className = "full-deck-container";
-                        let deck_container = document.createElement('div');
-                        deck_container.className = "deck-container";
-                        let colors_container = document.createElement('div');
-                        colors_container.className = "colors-container";
-                        let deck_preview = document.createElement('img');
-                        deck_preview.src = deck.previewimg;
-                        deck_preview.onclick = function() {
-                            window.location.href = deck.url;
-                        }
-                        deck_preview.style.cursor = "pointer";
-                        deck_preview.className = "deck-preview-img";
-                        let deck_name = document.createElement('div');
-                        deck_name.className = "deck-name";
-                        deck_name.innerText = deck.name;
-                        let deck_btns = document.createElement('div');
-                        deck_btns.className = "deck-buttons";
-                        let deck_link = document.createElement('a');
-                        deck_link.href = deck.url;
-                        let deck_edit_icon = document.createElement('img');
-                        deck_edit_icon.src = "/img/edit.png";
-                        deck_edit_icon.className = "deck-icon-green deck-icon-shadow";
-                        deck_link.appendChild(deck_edit_icon);
-                        let deck_submit_text = document.createElement("div");
-                        deck_submit_text.innerText = "Submit!";
-                        deck_submit_text.className = "deck-link deck-icon-shadow";
-                        let deck_submit_icon = document.createElement('img');
-                        deck_submit_icon.src = "/img/export-white.png";
-                        deck_submit_icon.className = "deck-icon-blue";
-                        deck_submit_text.style.cursor = "pointer";
-                        deck_submit_text.onclick = async function() {
-                            document.getElementById('modal-container').style.display = 'block';
-                            let modal_content = document.getElementById('modal-content');
-                            let content_container = document.createElement("div");
-                            content_container.className = "submit-modal";
-                            modal_content.innerHTML = `<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>`;
-                            
-                            for (const event of events) {
-                                let deck_submit_text = document.createElement("div");
-                                deck_submit_text.innerText = "Submit to " + event;
-                                deck_submit_text.className = "deck-link deck-icon-shadow";
-                                let deck_submit_icon = document.createElement('img');
-                                deck_submit_icon.src = "/img/export-white.png";
-                                deck_submit_icon.className = "deck-icon-blue";
-                                deck_submit_text.style.cursor = "pointer";
-                                deck_submit_text.onclick = async function() {
-                                    await getDoc(doc(db, "events", event)).then(async docSnap2 => {
-                                        let tourndata = docSnap2.data();
-                                        let decks_ = JSON.parse(tourndata.decks);
-                                        decks_[username] = deck;
-                                        await setDoc(doc(db, "events", event), {
-                                            decks: JSON.stringify(decks_)
-                                        });
-                                    });
-                                    alert("Submitted deck " + deck.name + " to" + event + "!");
-                                }
-                                deck_submit_text.appendChild(deck_submit_icon);
-                                content_container.appendChild(deck_submit_text);
-                            }
-                            modal_content.appendChild(content_container);
-                        }
-                        deck_submit_text.appendChild(deck_submit_icon);
-                        let deck_delete_icon = document.createElement('img');
-                        deck_delete_icon.src = "/img/trash.png";
-                        deck_delete_icon.className = "deck-icon-red deck-icon-shadow";
-                        deck_delete_icon.onclick = async function() {
-                            let new_decks = decks;
-                            // let index = 0;
-                            let user_deck = {};
-                            console.log(user_data.decks);
-                            for (let i = 0; i < decks.length; i++) {
-                                user_deck = decks[i];
-                                console.log(user_deck, i, deck.name);
-                                if (user_deck["name"] == deck.name) {
-                                    new_decks.splice(i,1);
-                                }
-                                // index += 1;
-                            }
-                            await setDoc(doc(db, "users", username), {
-                                username: username,
-                                password: password,
-                                decks: JSON.stringify(new_decks)
-                            });
-                            alert("Deck Deleted!");
-                            reload();
-                        }
-                        for (const color of deck.colors) {
-                            let color_ele = document.createElement('img');
-                            color_ele.src = `img/mana_${color}.png`;
-                            color_ele.className = "mana-img";
-                            colors_container.appendChild(color_ele);
-                        }
-                        deck_btns.appendChild(deck_link);
-                        deck_btns.appendChild(deck_submit_text);
-                        deck_btns.appendChild(deck_delete_icon);
-                        deck_container.appendChild(deck_name);
-                        deck_container.appendChild(deck_preview);
-                        deck_container.appendChild(deck_btns);
-                        full_deck_container.appendChild(deck_container);
-                        full_deck_container.appendChild(colors_container);
-                        document.getElementById(deck.format).appendChild(full_deck_container);
+
+                        document.getElementById(deck.format).appendChild(createDeckContainer(deck));
+
                     }
                     for (const deck of colls) {
                         let deck_container = document.createElement('div');
@@ -647,6 +541,150 @@
                         document.getElementById('colls').appendChild(deck_container);
                     }
                 });
+            }
+
+            function createFormatContainer(format_name) {
+                const full_format_container = document.createElement("div");
+                const format_container = document.createElement("div");
+
+                format_container.className = "format-container";
+                format_container.id = format_name;
+
+                const format_header = document.createElement("div");
+                format_header.innerText = format_name;
+                format_header.className = "format-header";
+
+                let divider = document.createElement("hr");
+
+                full_format_container.appendChild(format_header);
+                full_format_container.appendChild(divider);
+                full_format_container.appendChild(format_container);
+
+                return full_format_container;
+            }
+
+            function createDeckContainer(deck) {
+                let full_deck_container = document.createElement('div');
+                full_deck_container.className = "full-deck-container";
+
+                let deck_container = document.createElement('div');
+                deck_container.className = "deck-container";
+
+                let colors_container = document.createElement('div');
+                colors_container.className = "colors-container";
+
+                let deck_preview = document.createElement('img');
+                deck_preview.src = deck.previewimg;
+                deck_preview.onclick = function() {
+                    window.location.href = deck.url;
+                }
+
+                deck_preview.style.cursor = "pointer";
+                deck_preview.className = "deck-preview-img";
+
+                let deck_name = document.createElement('div');
+                deck_name.className = "deck-name";
+                deck_name.innerText = deck.name;
+
+                let deck_btns = document.createElement('div');
+                deck_btns.className = "deck-buttons";
+
+                let deck_link = document.createElement('a');
+                deck_link.href = deck.url;
+                let deck_edit_icon = createDeckIcon("edit", "green");
+
+                deck_link.appendChild(deck_edit_icon);
+                let deck_submit_text = createDeckIconText("export-white", "blue", "Submit!", "");
+                deck_submit_text.style.cursor = "pointer";
+                deck_submit_text.onclick = async function() {
+
+                    document.getElementById('modal-container').style.display = 'block';
+                    let modal_content = document.getElementById('modal-content');
+                    let content_container = document.createElement("div");
+                    content_container.className = "submit-modal";
+                    modal_content.innerHTML = `<span class="close" onclick="document.getElementById('modal-container').style.display = 'none';">&times;</span>`;
+                    
+                    for (const event of events) {
+                        let deck_submit_text = createDeckIconText("export-white", "blue", "Submit to " + event, "");
+
+                        deck_submit_text.onclick = async function() {
+                            await getDoc(doc(db, "events", event)).then(async docSnap2 => {
+                                let tourndata = docSnap2.data();
+                                let decks_ = JSON.parse(tourndata.decks);
+                                decks_[username] = deck;
+                                await setDoc(doc(db, "events", event), {
+                                    decks: JSON.stringify(decks_)
+                                });
+                            });
+                            alert("Submitted deck " + deck.name + " to" + event + "!");
+                        }
+
+                        content_container.appendChild(deck_submit_text);
+                    }
+                    modal_content.appendChild(content_container);
+                }
+
+                let deck_delete_icon = createDeckIcon("trash", "red");
+
+                deck_delete_icon.onclick = async function() {
+                    let new_decks = decks;
+                    // let index = 0;
+                    let user_deck = {};
+                    for (let i = 0; i < decks.length; i++) {
+                        user_deck = decks[i];
+                        console.log(user_deck, i, deck.name);
+                        if (user_deck["name"] == deck.name) {
+                            new_decks.splice(i,1);
+                        }
+                        // index += 1;
+                    }
+                    await setDoc(doc(db, "users", username), {
+                        username: username,
+                        password: password,
+                        decks: JSON.stringify(new_decks)
+                    });
+                    alert("Deck Deleted!");
+                    reload();
+                }
+
+                for (const color of deck.colors) {
+                    let color_ele = document.createElement('img');
+                    color_ele.src = `img/mana_${color}.png`;
+                    color_ele.className = "mana-img";
+                    colors_container.appendChild(color_ele);
+                }
+
+                deck_btns.appendChild(deck_link);
+                deck_btns.appendChild(deck_submit_text);
+                deck_btns.appendChild(deck_delete_icon);
+                deck_container.appendChild(deck_name);
+                deck_container.appendChild(deck_preview);
+                deck_container.appendChild(deck_btns);
+                full_deck_container.appendChild(deck_container);
+                full_deck_container.appendChild(colors_container);
+                return (full_deck_container);
+            }
+
+            function createDeckIcon(img, color) {
+                const deck_icon = document.createElement('img');
+                deck_icon.src = `/img/${img}.png`;
+                deck_icon.className = `deck-icon-${color} deck-icon-shadow`;
+
+                return deck_icon;
+            }
+
+            function createDeckIconText(img, color, text, link) {
+                let deck_icon_text = document.createElement("div");
+                deck_icon_text.innerText = text;
+                deck_icon_text.className = `deck-link${link} deck-icon-shadow`;
+
+                let deck_icon = document.createElement('img');
+                deck_icon.src = `/img/${img}.png`;
+                deck_icon.className = `deck-icon-${color}`;
+
+                deck_icon_text.appendChild(deck_icon);
+
+                return deck_icon_text;
             }
 
             reload();
